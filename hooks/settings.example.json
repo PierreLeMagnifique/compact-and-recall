@@ -1,0 +1,40 @@
+{
+  "_comment": "What install.py adds to ~/.claude/settings.json. Replace /path/to with the real repo location (install.py computes it for you). No other key is touched.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/path/to/python\" -X utf8 \"/path/to/compact-and-recall/tools/briefing.py\" --hook",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/path/to/python\" -X utf8 \"/path/to/compact-and-recall/tools/episodes.py\" hook",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/path/to/python\" -X utf8 \"/path/to/compact-and-recall/tools/recall_hook.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "autoCompactWindow": 200000
+}

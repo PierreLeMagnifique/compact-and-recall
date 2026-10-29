@@ -1,0 +1,11 @@
+# Never commit a memory: it holds your conversations.
+*.db
+*.db-wal
+*.db-shm
+episodes/
+sessions.json
+config.json
+secret_patterns.txt
+__pycache__/
+*.pyc
+.venv/

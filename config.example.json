@@ -1,0 +1,17 @@
+{
+  "_comment": "Copy to config.json (next to tools/) or ~/.compact-and-recall/config.json. Every key is optional; missing keys use the defaults in tools/cr_config.py.",
+  "memory_root": "~/.compact-and-recall",
+  "transcripts_glob": "~/.claude/projects/**/*.jsonl",
+  "human_label": "human",
+  "agent": {"env_var": "CR_AGENT", "fallback": "project_dir"},
+  "agent_declaration_regex": null,
+  "decisions_file": "docs/decisions.md",
+  "relay_markers": [],
+  "exclude_patterns": [],
+  "episodes": {"dir": "episodes", "max_chars": 12000},
+  "budgets": {"briefing_chars": 6000, "recall_chars": 3500, "recall_hits": 5},
+  "sensitive_fields": ["purchase_price", "cost_price", "margin", "wholesale_price"],
+  "extra_secret_patterns_file": "secret_patterns.txt",
+  "index": {"max_input_chars": 2000, "max_output_head": 1500, "max_output_tail": 500,
+            "interval_minutes": 10, "batch_files": 400}
+}
