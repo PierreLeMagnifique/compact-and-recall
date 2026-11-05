@@ -50,15 +50,20 @@ The tools are half of it. The other half is how the agent resumes after a compac
 ## Install
 
 ```
-git clone https://github.com/<you>/compact-and-recall
+git clone https://github.com/PierreLeMagnifique/compact-and-recall
 cd compact-and-recall
 cp config.example.json config.json          # optional; defaults work
+python tools/cr_config.py                    # shows which config file is used and where the memory will live
 python install.py --dry-run                  # shows the settings.json change, writes nothing
 python install.py                            # dated backup, adds the hooks, sets autoCompactWindow
 python install.py --task                     # Windows: scheduled task every 10 min; POSIX: prints a crontab line
 python tools/indexer.py --once               # first pass over existing transcripts
 python tools/search.py "what you remember"   # try it
 ```
+
+Then **open a new Claude Code session**: hooks are read when a session starts, so the chat that
+was already open does not have them. The first thing the new session prints is the briefing
+(`## Memory: <agent>, <date>`). If it prints `(no index yet …)`, run the indexer once.
 
 `install.py` touches only the `hooks` and `autoCompactWindow` keys of `~/.claude/settings.json`,
 re-reads the file, and restores the backup on any error. The memory lives in
@@ -67,6 +72,50 @@ re-reads the file, and restores the backup on any error. The memory lives in
 Name your agents with the `CR_AGENT` environment variable, or let the project directory name
 stand for the agent. Standing decisions are read from `docs/decisions.md` in the project
 (`decisions_file`), one decision per line starting with `D<n>`.
+
+### Windows, VS Code and Claude Code, step by step
+
+This is the setup it was built and tested on. Everything runs from the terminal inside VS Code
+(Terminal > New Terminal); the hooks then apply to every Claude Code session of your user, in the
+VS Code extension and in the `claude` command alike.
+
+1. **Prerequisites.** Python 3.9 or later on the PATH (`python --version` in the VS Code terminal;
+   the python.org installer with "Add python.exe to PATH" is enough, no package to install), Git,
+   and Claude Code already signed in (the extension or the CLI).
+2. **Clone to a stable place**, for example `%USERPROFILE%\tools\compact-and-recall`. The hooks
+   point to the absolute path of this folder and to the Python that ran `install.py`: if you move
+   the folder or change Python, run `python install.py` again (it replaces nothing, it adds the new
+   commands; remove the old ones from `settings.json` by hand or restore the backup first).
+3. **Check what will be used**: `python tools\cr_config.py`. Defaults: the memory under
+   `%USERPROFILE%\.compact-and-recall`, the transcripts of every project of your user under
+   `%USERPROFILE%\.claude\projects`. To change that, copy `config.example.json` to `config.json`
+   next to `tools\` and edit `memory_root` or `transcripts_glob`. If you set the variable
+   `COMPACT_AND_RECALL_CONFIG`, it must point to an existing file: a wrong path is refused, it never
+   falls back to the defaults in silence.
+4. **Install**: `python install.py --dry-run`, read the change, then `python install.py` and type
+   `YES`. The file edited is `%USERPROFILE%\.claude\settings.json`; a dated backup sits next to it.
+   Your `permissions`, `env`, `model` and other keys are left as they are, and this is asserted
+   after the write.
+5. **Index**: `python install.py --task` creates the scheduled task "compact-and-recall index"
+   (every 10 minutes, with `pythonw.exe`, so no window); `python tools\indexer.py --once` runs the
+   first pass now. Without an index the briefing and the recall print nothing.
+6. **Open a new Claude Code session** (a new chat in VS Code, or `claude` in a new terminal). The
+   briefing is printed at the top. Each later prompt that cites an exact anchor (a decision number
+   such as `D12`, a build number such as `v1172`, a file name) gets a `[memory]` block of 3 to 5
+   passages, only when those passages are outside the current context. No anchor, nothing found,
+   or still in context: the hook prints nothing, by design. To see it work by hand:
+   `echo {"session_id":"x","prompt":"what did we decide about D1","cwd":"."} | python tools\recall_hook.py`
+   (with an index that contains `D1`; `examples\sample_transcript.jsonl` does).
+7. **Name the agent.** By default the agent is the name of the folder opened in VS Code, which is
+   right when one folder is one project. For a fixed name whatever the folder, set `CR_AGENT` in
+   the environment Claude Code starts with (the `env` key of `settings.json` does it for every
+   session).
+8. **Give the project its decisions file and its rules.** Create `docs\decisions.md` in the
+   project, one decision per line starting with `D<n>` (the briefing shows the last eight), and
+   paste [docs/OPERATING_RULES.md](docs/OPERATING_RULES.md) into the project's `CLAUDE.md` so the
+   agent resumes by the briefing, the episode and the search instead of re-reading everything.
+9. **Uninstall**: copy the backup back over `settings.json` and run
+   `schtasks /Delete /TN "compact-and-recall index" /F`. The memory folder is yours to delete.
 
 ## Repository
 

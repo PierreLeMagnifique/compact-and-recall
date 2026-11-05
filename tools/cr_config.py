@@ -1,10 +1,12 @@
 """Shared configuration for compact-and-recall.
 
 Resolution order for the config file:
-  1. $COMPACT_AND_RECALL_CONFIG
+  1. $COMPACT_AND_RECALL_CONFIG (must exist: a variable that points to a missing file is an error,
+     never a silent fall-back to the defaults)
   2. <repo>/config.json (next to this tools/ folder)
   3. ~/.compact-and-recall/config.json
 Missing keys fall back to DEFAULTS, so an empty config.json is valid.
+`python tools/cr_config.py` prints which file is in use and where the memory lives.
 Everything is local: no network, no service, one SQLite file under memory_root.
 """
 import copy
@@ -73,9 +75,17 @@ def _deep_merge(base, extra):
 
 
 def config_path():
-    for p in (os.environ.get("COMPACT_AND_RECALL_CONFIG"), os.path.join(REPO, "config.json"),
-              os.path.expanduser("~/.compact-and-recall/config.json")):
-        if p and os.path.exists(p):
+    forced = os.environ.get("COMPACT_AND_RECALL_CONFIG")
+    if forced:
+        if not os.path.isfile(forced):
+            # A typo here must not fall back to the defaults in silence: the defaults index every
+            # transcript of this user into ~/.compact-and-recall, which is rarely what was meant.
+            raise FileNotFoundError(
+                f"COMPACT_AND_RECALL_CONFIG points to {forced!r}, which does not exist. "
+                "Fix the variable or unset it. Nothing was read and nothing was written.")
+        return forced
+    for p in (os.path.join(REPO, "config.json"), os.path.expanduser("~/.compact-and-recall/config.json")):
+        if os.path.exists(p):
             return p
     return None
 

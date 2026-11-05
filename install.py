@@ -194,7 +194,9 @@ def main():
         print("Settings written, re-read and verified.")
     if a.task:
         schedule(a.task_minutes, dry_run=False)
-    print("\nDone. Sessions pick the hooks up at their next start or next compaction.")
+    print("\nDone. Hooks are read when a session starts: open a NEW Claude Code session (a new chat in VS Code,"
+          "\nor a new `claude` in a terminal). Sessions already open do not have them yet."
+          "\nThen run `python tools/indexer.py --once` if you have not: recall and the briefing need an index.")
 
 
 if __name__ == "__main__":
