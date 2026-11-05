@@ -103,9 +103,17 @@ VS Code extension and in the `claude` command alike.
    briefing is printed at the top. Each later prompt that cites an exact anchor (a decision number
    such as `D12`, a build number such as `v1172`, a file name) gets a `[memory]` block of 3 to 5
    passages, only when those passages are outside the current context. No anchor, nothing found,
-   or still in context: the hook prints nothing, by design. To see it work by hand:
-   `echo {"session_id":"x","prompt":"what did we decide about D1","cwd":"."} | python tools\recall_hook.py`
-   (with an index that contains `D1`; `examples\sample_transcript.jsonl` does).
+   or still in context: the hook prints nothing, by design. Decision and question numbers are
+   recalled only within the same agent (a `D3` of one project is not the `D3` of another); file
+   names and build numbers are recalled across all agents. To see it work by hand, in the VS Code
+   terminal (PowerShell), after the indexer has read `examples\sample_transcript.jsonl`:
+   `'{"session_id":"try1","prompt":"what changed in planner.py","cwd":"."}' | python tools\recall_hook.py`
+   prints a `[memory]` block with two passages (in `cmd.exe`, drop the single quotes). Change the
+   session id to run it again: an anchor is recalled once per session until the next compaction.
+   Transcripts written before the install are attributed to the folder name Claude Code gives them
+   (for example `c--Users-you-myproject`), not to the agent name of the new sessions: `search.py`
+   finds them, but the briefing's verbatim messages and the recall of decision numbers only use the
+   sessions started after the install.
 7. **Name the agent.** By default the agent is the name of the folder opened in VS Code, which is
    right when one folder is one project. For a fixed name whatever the folder, set `CR_AGENT` in
    the environment Claude Code starts with (the `env` key of `settings.json` does it for every
